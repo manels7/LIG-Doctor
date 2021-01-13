@@ -9,7 +9,7 @@ def writeDistributions(inputFile, hadmToCodes_Map = None, subjectTOhadms_Map = N
 	distFileNamePrefix = inputFile + 'DISTRIBUTION.'
 	#----------------
 	if hadmToCodes_Map is not None:
-		print 'Distribution of the number of codes per admission'
+		print('Distribution of the number of codes per admission')
 		maxNumberOfCodesPerVisit = 0
 		for hadm_id in hadmToCodes_Map.keys():
 			if len(hadmToCodes_Map[hadm_id]) > maxNumberOfCodesPerVisit:
@@ -35,7 +35,7 @@ def writeDistributions(inputFile, hadmToCodes_Map = None, subjectTOhadms_Map = N
 		file.close()
 	#----------------
 	if subjectTOhadms_Map is not None:
-		print 'Distribution of the number of admissions per patient'
+		print('Distribution of the number of admissions per patient')
 		maxNumberOfVisits = 0
 		for subject_id, hadmList in subjectTOhadms_Map.iteritems():
 			if len(hadmList) > maxNumberOfVisits:
@@ -63,7 +63,7 @@ def writeDistributions(inputFile, hadmToCodes_Map = None, subjectTOhadms_Map = N
 	#----------------
 	if all_subjects_list_of_CODEs_List is not None:
 		#distribution of number of times each code is used
-		print 'Distribution of the number of times each code is used'
+		print('Distribution of the number of times each code is used')
 		CODES_distributionMAP = {}	#Here we build the distribution of codes and order the inner codes of the network according to this distribution
 		#As a result, the most common code will become 0-indexed in its respective tensor dimension
 		for subject_list_of_CODEs_List in all_subjects_list_of_CODEs_List:
@@ -90,7 +90,7 @@ def writeDistributions(inputFile, hadmToCodes_Map = None, subjectTOhadms_Map = N
 			file.write(";" + "%.2f" % accumulated + '\n')
 		file.close()
 
-		print 'Distribution files written at ' + distFileNamePrefix
+		print('Distribution files written at ' + distFileNamePrefix)
 	return CODES_distributionMAP
 	#----------------
 #computes the entropy of every sequence in .... and draws the corresponding distribution of entropies
@@ -144,4 +144,4 @@ def computeShannonEntropyDistribution(all_subjectsListOfCODEsList_LIST, codesFre
 		file.write('; ' + "%.2f"%(bin_MAP[bin]/float(totalCounts)))
 		file.write(";" + "%.2f"%accumulated +'\n')
 	file.close()
-	print 'Shannon distribution file written at ' + outputFile
+	print('Shannon distribution file written at ' + outputFile)

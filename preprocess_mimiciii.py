@@ -35,10 +35,10 @@ def map_ICD9_to_CCS(map):
 					procCODEstoInternalID_map[hadm_id] = [CCS_code]
 				set_of_used_codes.add(ICD9)
 			except KeyError:
-				print str(sys.exc_info()[0]) + '  ' + str(ICD9) + ". ICD9 code not found, please verify your ICD9 to CCS mapping before proceeding."
-	print '-Total number (complete set) of ICD9 codes (diag + proc): ' + str(len(set(icd9TOCCS_Map.keys())))
-	print '-Total number (complete set) of CCS codes (diag + proc): ' + str(len(set(icd9TOCCS_Map.values())))
-	print '-Total number of ICD9 codes actually used: ' + str(len(set_of_used_codes))
+				print(str(sys.exc_info()[0]) + '  ' + str(ICD9) + ". ICD9 code not found, please verify your ICD9 to CCS mapping before proceeding.")
+	print('-Total number (complete set) of ICD9 codes (diag + proc): ' + str(len(set(icd9TOCCS_Map.keys()))))
+	print('-Total number (complete set) of CCS codes (diag + proc): ' + str(len(set(icd9TOCCS_Map.values()))))
+	print('-Total number of ICD9 codes actually used: ' + str(len(set_of_used_codes)))
 
 	return procCODEstoInternalID_map
 
@@ -77,7 +77,7 @@ def get_ICD9s_from_mimic_file(fileName, hadmToMap):
 	for hadm_id in hadmToMap.keys():
 		hadmToMap[hadm_id] = list(hadmToMap[hadm_id])   #convert to list, as the rest of the codes expects
 	mimicFile.close()
-	print '-Number of null ICD9 codes in file ' + fileName + ': ' + str(number_of_null_ICD9_codes)
+	print('-Number of null ICD9 codes in file ' + fileName + ': ' + str(number_of_null_ICD9_codes))
 
 def convert_type_to_float(type):
 	#very specific to Mimic-III ADMISSIONS.csv
@@ -86,7 +86,7 @@ def convert_type_to_float(type):
 	elif type == 'ELECTIVE': code = 1
 	elif type == 'EMERGENCY': code = 2
 	elif type == 'URGENT': code = 3
-	else: print 'ERROR in admission type value'
+	else: print('ERROR in admission type value')
 
 	return code
 
@@ -108,7 +108,7 @@ if __name__ == '__main__':
 	CCS_ordered_internalCodesMap = {}
 
 	#one line of the admissions file contains one admission hadm_id of one subject_id at a given time admittime
-	print 'Building Maps: hadm_id to admtttime, duration, and type; and Map: subject_id to set of all its hadm_ids'
+	print('Building Maps: hadm_id to admtttime, duration, and type; and Map: subject_id to set of all its hadm_ids')
 	subjectTOhadms_Map = {}
 	hadmTOadmttime_Map = {}					   					#   0  ,     1    ,    2  ,     3   ,    4
 	hadmTOduration_Map = {}
@@ -163,31 +163,31 @@ if __name__ == '__main__':
 
 
 	mimic_ADMISSIONS_csv.close()
-	print '-Initial number of admissions: ' + str(initial_number_of_admissions)
-	print '-Initial number of subjects: ' + str(len(subjectTOhadms_Map))
+	print('-Initial number of admissions: ' + str(initial_number_of_admissions))
+	print('-Initial number of subjects: ' + str(len(subjectTOhadms_Map)))
 	hadmToICD9CODEs_Map = {}
 	hadmToICD9ProcCODEs_Map = {}
 
 	if len(ARGS.diagnoses_file) > 0:
 		#one line in the diagnoses file contains only one diagnose code (ICD9) for one admission hadm_id
-		print 'Building Map: hadm_id to set of ICD9 codes from DIAGNOSES_ICD'
+		print('Building Map: hadm_id to set of ICD9 codes from DIAGNOSES_ICD')
 		get_ICD9s_from_mimic_file(ARGS.diagnoses_file, hadmToICD9CODEs_Map)
 	if len(ARGS.procedures_file) > 0:
-		print 'Building Map: hadm_id to set of ICD9 codes from PROCEDURES_ICD'
+		print('Building Map: hadm_id to set of ICD9 codes from PROCEDURES_ICD')
 		get_ICD9s_from_mimic_file(ARGS.procedures_file, hadmToICD9ProcCODEs_Map)
 
-	print '-Number of valid admissions (at least one diagnosis): ' + str(len(hadmToICD9CODEs_Map))
+	print('-Number of valid admissions (at least one diagnosis): ' + str(len(hadmToICD9CODEs_Map)))
 
 	#Here we make sure we have only admissions with procedures AND diagnosis
 	if len(ARGS.procedures_file) > 0:
-		print '-Number of procedures codes before cleaning: ' + str(len(hadmToICD9ProcCODEs_Map))
+		print('-Number of procedures codes before cleaning: ' + str(len(hadmToICD9ProcCODEs_Map)))
 		for hadm_id in hadmToICD9CODEs_Map.keys():
 			if hadm_id not in hadmToICD9ProcCODEs_Map.keys():
 				del hadmToICD9CODEs_Map[hadm_id]
 		for hadm_id in hadmToICD9ProcCODEs_Map.keys():
 			if hadm_id not in hadmToICD9CODEs_Map.keys():
 				del hadmToICD9ProcCODEs_Map[hadm_id]
-		print '-Number of procedures after cleaning: ' + str(len(hadmToICD9ProcCODEs_Map))
+		print('-Number of procedures after cleaning: ' + str(len(hadmToICD9ProcCODEs_Map)))
 
 	#Cleaning up inconsistencies
 	#some tuples in the diagnoses table have ICD9 empty; we clear the admissions without diagnoses from all the maps
@@ -195,7 +195,7 @@ if __name__ == '__main__':
 	#We also clean admissions in which admission time < discharge time - there are 89 records like that in the original dataset
 	number_of_admissions_without_diagnosis = 0
 	number_of_subjects_without_valid_admissions = 0
-	print 'Cleaning up admissions without diagnoses'
+	print('Cleaning up admissions without diagnoses')
 	for subject_id, hadmList in subjectTOhadms_Map.items():   #hadmTOadmttime_Map,subjectTOhadms_Map,hadm_cid9s_Map
 		hadmListCopy = list(hadmList)    #copy the list, iterate over the copy, edit the original; otherwise, iteration problems
 		for hadm_id in hadmListCopy:
@@ -209,13 +209,13 @@ if __name__ == '__main__':
 		if len(hadmList) == 0:					      #toss off subject_id without admissions
 			number_of_subjects_without_valid_admissions += 1
 			del subjectTOhadms_Map[subject_id]     #delete by value
-	print '-Number of admissions without diagnosis: ' + str(number_of_admissions_without_diagnosis)
-	print '-Number of admissions after cleaning: ' + str(len(hadmToICD9CODEs_Map))
-	print '-Number of subjects without admissions: ' + str(number_of_subjects_without_valid_admissions)
-	print '-Number of subjects after cleaning: ' + str(len(subjectTOhadms_Map))
+	print('-Number of admissions without diagnosis: ' + str(number_of_admissions_without_diagnosis))
+	print('-Number of admissions after cleaning: ' + str(len(hadmToICD9CODEs_Map)))
+	print('-Number of subjects without admissions: ' + str(number_of_subjects_without_valid_admissions))
+	print('-Number of subjects after cleaning: ' + str(len(subjectTOhadms_Map)))
 
 	if ARGS.map_ICD9_to_CCS:
-		print 'Mapping ICD9 codes to CCS codes'
+		print('Mapping ICD9 codes to CCS codes')
 		hadmToICD9CODEs_Map = map_ICD9_to_CCS(hadmToICD9CODEs_Map)
 		if len(ARGS.procedures_file) > 0:
 			hadmToICD9ProcCODEs_Map = map_ICD9_to_CCS(hadmToICD9ProcCODEs_Map)
@@ -223,7 +223,7 @@ if __name__ == '__main__':
 	#since the data in the database is not necessarily time-ordered
 	#here we sort the admissions (hadm_id) according to the admission time (admittime)
 	#after this, we have a list subjectTOorderedHADM_IDS_Map(subject_id) -> admission-time-ordered set of ICD9 codes
-	print 'Building Map: subject_id to admission-ordered (admittime, ICD9s set) and cleaning one-admission-only patients'
+	print('Building Map: subject_id to admission-ordered (admittime, ICD9s set) and cleaning one-admission-only patients')
 	subjectTOorderedHADM_IDS_Map = {}
 	subjectTOProcHADM_IDs_Map = {}
 	#for each admission hadm_id of each patient subject_id
@@ -237,10 +237,10 @@ if __name__ == '__main__':
 		sortedList = sorted([(hadmTOadmttime_Map[hadm_id], hadmToICD9CODEs_Map[hadm_id], hadm_id) for hadm_id in hadmList])
 		# each element in subjectTOorderedHADM_IDS_Map is a key-value (subject_id, (admittime, ICD9_List, hadm_id))
 		subjectTOorderedHADM_IDS_Map[subject_id] = sortedList
-	print '-Number of discarded subjects with only one admission: ' + str(number_of_subjects_with_only_one_visit)
-	print '-Number of subjects after ordering: ' + str(len(subjectTOorderedHADM_IDS_Map))
+	print('-Number of discarded subjects with only one admission: ' + str(number_of_subjects_with_only_one_visit))
+	print('-Number of subjects after ordering: ' + str(len(subjectTOorderedHADM_IDS_Map)))
 
-	print 'Converting maps to lists in preparation for dump'
+	print('Converting maps to lists in preparation for dump')
 	all_subjectsListOfCODEsList_LIST = []
 	#for each subject_id, get its key-value (subject_id, (admittime, ICD9_List, hadm_id)) - the value is a tripple
 	for subject_id, time_ordered_CODESs_List in subjectTOorderedHADM_IDS_Map.iteritems():
@@ -263,7 +263,7 @@ if __name__ == '__main__':
 		i = 0
 		internalCodeToTextualDescriptionMAP = {}
 		for CODE, value in CODES_distributionMAP:
-			print 'Internal code: ' + str(i) + '; CCS code: ' + str(CODE) +'; Frequency: ' + str(value) + '; Textual: ' + CCS_to_descriptionMap[CODE]
+			print('Internal code: ' + str(i) + '; CCS code: ' + str(CODE) +'; Frequency: ' + str(value) + '; Textual: ' + CCS_to_descriptionMap[CODE])
 			internalCodeToTextualDescriptionMAP[i] = CCS_to_descriptionMap[CODE]
 			i += 1
 		pickle.dump(internalCodeToTextualDescriptionMAP, open(ARGS.output_prefix[0:ARGS.output_prefix.rfind('/')]+'/internalCodeToTextualDescriptionMAP.pickle', 'wb'), -1)
@@ -279,7 +279,7 @@ if __name__ == '__main__':
 	final_number_of_admissions = 0
 	#Here we convert the database codes to internal sequential codes
 	#we use the same for to build lists of interval, duration and type
-	print 'Converting database ids to sequential integer ids'
+	print('Converting database ids to sequential integer ids')
 	procCODEstoInternalID_map = {}
 	for subject_list_of_CODEs_List in all_subjectsListOfCODEsList_LIST:
 		new_subject_list_of_CODEs_List = []
@@ -325,9 +325,9 @@ if __name__ == '__main__':
 			if len(ARGS.procedures_file) > 0:
 				new_all_subjects_list_of_ProcCodes_List.append(new_subject_list_of_ProcCODEs_List)
 
-	print ''
+	print('')
 	nCodes = len(CCS_ordered_internalCodesMap)
-	print '-Number of actually used DIAGNOSES codes: '+ str(nCodes)
+	print('-Number of actually used DIAGNOSES codes: '+ str(nCodes))
 
 	#we create sequences with all possible sizes, for example, a sequence [[a],[b],[c],[d]] gives raise to [[a],[b],[c]] and [[a],[b]], besides the original
 	#this one is mandatory
@@ -341,7 +341,7 @@ if __name__ == '__main__':
 
 	#writing test data
 	random.shuffle(new_all_subjectsListOfCODEsList_LIST)
-	print 'Writing ' + str(partitions[1]) + '% of the patients read from file ' + ARGS.admissions_file
+	print('Writing ' + str(partitions[1]) + '% of the patients read from file ' + ARGS.admissions_file)
 	index_of_first_patient_to_dump = int(math.ceil(len(new_all_subjectsListOfCODEsList_LIST)*int(partitions[0])/100))
 	index_of_last_patient_to_dump = len(new_all_subjectsListOfCODEsList_LIST)
 	#index_of_last_patient_to_dump = index_of_first_patient_to_dump + int(math.ceil(len(new_all_subjectsListOfCODEsList_LIST)*int(partitions[1])/100))
@@ -349,8 +349,8 @@ if __name__ == '__main__':
 	pickle.dump(duration_of_admissionsListOfLists[index_of_first_patient_to_dump:index_of_last_patient_to_dump], open(ARGS.output_prefix + '_' + str(nCodes) + '.DURATION.test', 'wb'), -1)
 	pickle.dump(interval_since_last_admissionListOfLists[index_of_first_patient_to_dump:index_of_last_patient_to_dump], open(ARGS.output_prefix + '_' + str(nCodes) + '.INTERVAL.test', 'wb'), -1)
 	pickle.dump(type_of_admissionsListOfLists[index_of_first_patient_to_dump:index_of_last_patient_to_dump], open(ARGS.output_prefix + '_' + str(nCodes) + '.TYPE.test', 'wb'), -1)
-	print '   Patients from ' + str(index_of_first_patient_to_dump) + ' to ' + str(index_of_last_patient_to_dump)
-	print '   Success, file: ' + ARGS.output_prefix + '_' + str(nCodes) + '.test created'
+	print('   Patients from ' + str(index_of_first_patient_to_dump) + ' to ' + str(index_of_last_patient_to_dump))
+	print('   Success, file: ' + ARGS.output_prefix + '_' + str(nCodes) + '.test created')
 	total_patients_dumped = index_of_last_patient_to_dump - index_of_first_patient_to_dump
 	if len(ARGS.procedures_file) > 0:
 		pickle.dump(new_all_subjects_list_of_ProcCodes_List[index_of_first_patient_to_dump:index_of_last_patient_to_dump], open(ARGS.output_prefix + '_' + str(nProcCodes) + '.PROCEDURE.test', 'wb'), -1)
@@ -377,21 +377,21 @@ if __name__ == '__main__':
 
 	if len(ARGS.procedures_file) > 0:
 		nProcCodes = len(procCODEstoInternalID_map)
-		print '-Numer of actually used PROCEDURE codes: ' + str(nProcCodes)
+		print('-Numer of actually used PROCEDURE codes: ' + str(nProcCodes))
 
-	print '-Final number of subjects: ' + str(len(new_all_subjectsListOfCODEsList_LIST))
-	print '-Final number of admissions: ' + str(final_number_of_admissions)
+	print('-Final number of subjects: ' + str(len(new_all_subjectsListOfCODEsList_LIST)))
+	print('-Final number of admissions: ' + str(final_number_of_admissions))
 	#Partitioning data
 	total_patients_dumped = 0;
 
-	print 'Writing ' + str(partitions[0]) + '% of the patients read from file ' + ARGS.admissions_file
+	print('Writing ' + str(partitions[0]) + '% of the patients read from file ' + ARGS.admissions_file)
 	index_of_last_patient_to_dump = int(math.ceil(len(new_all_subjectsListOfCODEsList_LIST)*int(partitions[0])/100))
 	pickle.dump(new_all_subjectsListOfCODEsList_LIST[0:index_of_last_patient_to_dump], open(ARGS.output_prefix + '_' + str(nCodes) + '.train', 'wb'), -1)
 	pickle.dump(duration_of_admissionsListOfLists[0:index_of_last_patient_to_dump], open(ARGS.output_prefix + '_' + str(nCodes) + '.DURATION.train', 'wb'), -1)
 	pickle.dump(interval_since_last_admissionListOfLists[0:index_of_last_patient_to_dump], open(ARGS.output_prefix + '_' + str(nCodes) + '.INTERVAL.train', 'wb'), -1)
 	pickle.dump(type_of_admissionsListOfLists[0:index_of_last_patient_to_dump], open(ARGS.output_prefix + '_' + str(nCodes) + '.TYPE.train', 'wb'), -1)
-	print '   Patients from 0 to ' + str(index_of_last_patient_to_dump)
-	print '   Success, file: ' + ARGS.output_prefix + '_' + str(nCodes) + '.train created'
+	print('   Patients from 0 to ' + str(index_of_last_patient_to_dump))
+	print('   Success, file: ' + ARGS.output_prefix + '_' + str(nCodes) + '.train created')
 	total_patients_dumped += index_of_last_patient_to_dump
 	if len(ARGS.procedures_file) > 0:
 		pickle.dump(new_all_subjects_list_of_ProcCodes_List[0:index_of_last_patient_to_dump], open(ARGS.output_prefix + '_' + str(nProcCodes) + '.PROCEDURE.train', 'wb'), -1)

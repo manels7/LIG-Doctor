@@ -1,5 +1,5 @@
 import sys
-import cPickle as pickle
+import _pickle as pickle
 import os
 
 if __name__ == '__main__':
@@ -30,5 +30,5 @@ if __name__ == '__main__':
 
 	pickle.dump(icd9TOccs_Map, open(sys.path[0]+'/icd9_to_css_dictionary', 'wb'), -1)
 	pickle.dump(ccsTOdescription_Map, open(sys.path[0]+'/ccs_to_description_dictionary', 'wb'), -1)
-	print 'Total icd9 to ccs entries: ' + str(len(icd9TOccs_Map))
-	print 'Total ccs codes/descriptions: ' + str(len(ccsTOdescription_Map))
+	print('Total icd9 to ccs entries: ' + str(len(icd9TOccs_Map)))
+	print('Total ccs codes/descriptions: ' + str(len(ccsTOdescription_Map)))
