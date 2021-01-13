@@ -5,7 +5,7 @@
 #################################################################################################
 import random
 import math
-import cPickle as pickle
+import _pickle as pickle
 import os
 from collections import OrderedDict
 import argparse
@@ -20,7 +20,7 @@ global tPARAMS
 
 def unzip(zipped):
 	new_params = OrderedDict()
-	for key, value in zipped.iteritems():
+	for key, value in zipped.items():
 		new_params[key] = value.get_value()
 	return new_params
 
@@ -133,11 +133,11 @@ def bMinGRU_layer(inputTensor, layerIndex, hiddenDimSize, mask=None):
 		return h_new, h_previous # becomes h_previous in the next iteration
 
 	results, _ = theano.scan(fn=stepFn,  # function to execute
-								   sequences=[bStepMask, Wf, Wh],  # input to stepFn
-								   outputs_info=[T.alloc(numpy_floatX(0.0), batchSize, hiddenDimSize),T.alloc(numpy_floatX(0.0), batchSize, hiddenDimSize)], #initial h_previous
-								   # just initialization
-								   name='bMinGRU_layer' + layerIndex,  # just labeling for debug
-								   n_steps=maxNumberOfVisits)  # number of times to execute - scan is a loop
+							 sequences=[bStepMask, Wf, Wh],  # input to stepFn
+							 outputs_info=[T.alloc(numpy_floatX(0.0), batchSize, hiddenDimSize),T.alloc(numpy_floatX(0.0), batchSize, hiddenDimSize)], #initial h_previous
+							 # just initialization
+							 name='bMinGRU_layer' + layerIndex,  # just labeling for debug
+							 n_steps=maxNumberOfVisits)  # number of times to execute - scan is a loop
 
 	return results[0]
 
@@ -186,19 +186,19 @@ def build_model():
 		n_steps=maxNumberOfAdmissions)
 
 	flowing_tensor = results * mask[:, :, None]
-	epislon = 1e-8
+	epsilon = 1e-8
 
 	#the answer (label) is at y[nVisits - 1], that is, the last visit
 	def computeCrossEntropy(nVisitsOfEachPatient_List, patientsIndexes, y, flowing_tensor):
 		nVisits = T.cast(nVisitsOfEachPatient_List,'int32')
 		ithPatient = T.cast(patientsIndexes,'int32')
-		cross_entropy = -(y[nVisits - 1][ithPatient] * T.log(flowing_tensor[nVisits - 1][ithPatient] + epislon) + (1. - y[nVisits - 1][ithPatient]) * T.log(1. - flowing_tensor[nVisits - 1][ithPatient] + epislon))
+		cross_entropy = -(y[nVisits - 1][ithPatient] * T.log(flowing_tensor[nVisits - 1][ithPatient] + epsilon) + (1. - y[nVisits - 1][ithPatient]) * T.log(1. - flowing_tensor[nVisits - 1][ithPatient] + epsilon))
 		return cross_entropy
 
 	matrixCrossEntropy, _ = theano.scan(fn=computeCrossEntropy,
-								  	sequences=[nVisitsOfEachPatient_List,T.arange(nOfPatients)],
-									non_sequences=[y,flowing_tensor],
-									n_steps = nOfPatients)
+										sequences=[nVisitsOfEachPatient_List,T.arange(nOfPatients)],
+										non_sequences=[y,flowing_tensor],
+										n_steps = nOfPatients)
 
 	# the complete crossentropy equation is -1/n* sum(cross_entropy); where n is the number of elements
 	# see http://neuralnetworksanddeeplearning.com/chap3.html#regularization
@@ -213,9 +213,9 @@ def build_model():
 #http://ruder.io/optimizing-gradient-descent/index.html#adadelta
 #https://arxiv.org/abs/1212.5701
 def addAdadeltaGradientDescent(grads, xf, xb, y, mask, nVisitsOfEachPatient_List, MODEL):
-	zipped_grads = [theano.shared(p.get_value() * numpy_floatX(0.), name='%s_grad' % k) for k, p in tPARAMS.iteritems()]
-	running_up2 = [theano.shared(p.get_value() * numpy_floatX(0.), name='%s_rup2' % k) for k, p in tPARAMS.iteritems()]
-	running_grads2 = [theano.shared(p.get_value() * numpy_floatX(0.), name='%s_rgrad2' % k) for k, p in tPARAMS.iteritems()]
+	zipped_grads = [theano.shared(p.get_value() * numpy_floatX(0.), name='%s_grad' % k) for k, p in tPARAMS.items()]
+	running_up2 = [theano.shared(p.get_value() * numpy_floatX(0.), name='%s_rup2' % k) for k, p in tPARAMS.items()]
+	running_grads2 = [theano.shared(p.get_value() * numpy_floatX(0.), name='%s_rgrad2' % k) for k, p in tPARAMS.items()]
 
 	zgup = [(zg, g) for zg, g in zip(zipped_grads, grads)]
 	rg2up = [(rg2, 0.95 * rg2 + 0.05 * (g ** 2)) for rg2, g in zip(running_grads2, grads)]
@@ -238,7 +238,7 @@ def load_data():
 	print("Note: these files carry 3D tensor data; the above numbers refer to dimension 0, dimensions 1 and 2 have irregular sizes.")
 
 	ARGS.numberOfInputCodes = getNumberOfCodes([main_trainSet,main_testSet])
-	print 'Number of diagnosis input codes: ' + str(ARGS.numberOfInputCodes)
+	print('Number of diagnosis input codes: ' + str(ARGS.numberOfInputCodes))
 
 	train_sorted_index = sorted(range(len(main_trainSet)), key=lambda x: len(main_trainSet[x]))  #lambda x: len(seq[x]) --> f(x) return len(seq[x])
 	main_trainSet = [main_trainSet[i] for i in train_sorted_index]
@@ -256,7 +256,7 @@ def performEvaluation(TEST_MODEL_COMPILED, test_Set):
 	crossEntropySum = 0.0
 	dataCount = 0.0
 	#computes de crossEntropy for all the elements in the test_Set, using the batch scheme of partitioning
-	for index in xrange(n_batches):
+	for index in range(n_batches):
 		batchX = test_Set[index * batchSize:(index + 1) * batchSize]
 		xf, xb, y, mask, nVisitsOfEachPatient_List = prepareHotVectors(batchX)
 		crossEntropy = TEST_MODEL_COMPILED(xf, xb, y, mask, nVisitsOfEachPatient_List)
@@ -264,25 +264,25 @@ def performEvaluation(TEST_MODEL_COMPILED, test_Set):
 		#accumulation by simple summation taking the batch size into account
 		crossEntropySum += crossEntropy * len(batchX)
 		dataCount += float(len(batchX))
-		#At the end, it returns the mean cross entropy considering all the batches
+	#At the end, it returns the mean cross entropy considering all the batches
 	return n_batches, crossEntropySum / dataCount
 
 def train_model():
-	print '==> data loading'
+	print('==> data loading')
 	trainSet, testSet = load_data()
 	previousDimSize = ARGS.numberOfInputCodes
 
-	print '==> parameters initialization'
+	print('==> parameters initialization')
 	print('Using neuron type Bidirectional Minimal Gated Recurrent Unit')
 	previousDimSize = init_params_BiMinGRU(previousDimSize)
 	init_params_output_layer(previousDimSize)
 
-	print '==> model building'
+	print('==> model building')
 	xf, xb, y, mask, nVisitsOfEachPatient_List, MODEL = build_model()
-	grads = T.grad(theano.gradient.grad_clip(MODEL, -0.3, 0.3), wrt=tPARAMS.values())
+	grads = T.grad(theano.gradient.grad_clip(MODEL, -0.3, 0.3), wrt=list(tPARAMS.values()))
 	TRAIN_MODEL_COMPILED, UPDATE_WEIGHTS_COMPILED = addAdadeltaGradientDescent(grads, xf, xb, y, mask, nVisitsOfEachPatient_List, MODEL)
 
-	print '==> training and validation'
+	print('==> training and validation')
 	batchSize = ARGS.batchSize
 	n_batches = int(np.ceil(float(len(trainSet)) / float(batchSize)))
 	TEST_MODEL_COMPILED = theano.function(inputs=[xf, xb, y, mask, nVisitsOfEachPatient_List], outputs=MODEL, name='TEST_MODEL_COMPILED')
@@ -294,7 +294,7 @@ def train_model():
 	iImprovementEpochs = 0
 	iConsecutiveNonImprovements = 0
 	epoch_counter = 0
-	for epoch_counter in xrange(ARGS.nEpochs):
+	for epoch_counter in range(ARGS.nEpochs):
 		iteration = 0
 		trainCrossEntropyVector = []
 		for index in random.sample(range(n_batches), n_batches):

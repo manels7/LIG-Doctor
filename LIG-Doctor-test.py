@@ -3,7 +3,7 @@
 # note: in many places, the code could be shorter, but that would just make it less comprehensible
 #################################################################################################
 import numpy as np
-import cPickle as pickle
+import _pickle as pickle
 from collections import OrderedDict
 import argparse
 import theano
@@ -39,7 +39,7 @@ def prepareHotVectors(test_tensor):
 def loadModel():
 	model = np.load(ARGS.modelFile)
 	tPARAMS = OrderedDict()
-	for key, value in model.iteritems():
+	for key, value in model.items():
 		tPARAMS[key] = theano.shared(value, name=key)
 	ARGS.numberOfInputCodes = model['fWf_0'].shape[0]
 	return tPARAMS
@@ -85,11 +85,11 @@ def bMinGRU_layer(inputTensor, layerIndex, hiddenDimSize, mask=None):
 		return h_new, h_previous # becomes h_previous in the next iteration
 
 	results, _ = theano.scan(fn=stepFn,  # function to execute
-								   sequences=[bStepMask, Wf, Wh],  # input to stepFn
-								   outputs_info=[T.alloc(numpy_floatX(0.0), batchSize, hiddenDimSize),T.alloc(numpy_floatX(0.0), batchSize, hiddenDimSize)], #initial h_previous
-								   # just initialization
-								   name='bMinGRU_layer' + layerIndex,  # just labeling for debug
-								   n_steps=maxNumberOfVisits)  # number of times to execute - scan is a loop
+							 sequences=[bStepMask, Wf, Wh],  # input to stepFn
+							 outputs_info=[T.alloc(numpy_floatX(0.0), batchSize, hiddenDimSize),T.alloc(numpy_floatX(0.0), batchSize, hiddenDimSize)], #initial h_previous
+							 # just initialization
+							 name='bMinGRU_layer' + layerIndex,  # just labeling for debug
+							 n_steps=maxNumberOfVisits)  # number of times to execute - scan is a loop
 
 	return results[0]
 def build_model():
@@ -103,11 +103,11 @@ def build_model():
 
 	for i, hiddenDimSize in enumerate(ARGS.hiddenDimSize):
 		flowing_tensorf = fMinGRU_layer(flowing_tensorf, str(i), hiddenDimSize, mask=mask)
-		#flowing_tensorf = flowing_tensorf*0.5 #suggested in many places to reflect dropout used in training - it just reduces performance
+	#flowing_tensorf = flowing_tensorf*0.5 #suggested in many places to reflect dropout used in training - it just reduces performance
 
 	for i, hiddenDimSize in enumerate(ARGS.hiddenDimSize):
 		flowing_tensorb = bMinGRU_layer(flowing_tensorb, str(i), hiddenDimSize, mask=mask)
-		#flowing_tensorf = flowing_tensorf * 0.5
+	#flowing_tensorf = flowing_tensorf * 0.5
 
 	flowing_tensorb = flowing_tensorb[::-1, ::, ::]
 	joint_flow = T.nnet.relu(T.dot(flowing_tensorf, tPARAMS['fJ']) + T.dot(flowing_tensorb, tPARAMS['bJ']) + tPARAMS['fbb'],tPARAMS['jlrelu'])
@@ -126,7 +126,8 @@ def build_model():
 
 
 def load_data():
-	testSet_x = np.array(pickle.load(open(ARGS.inputFileRadical+'.test', 'rb')))
+	#testSet_x = np.array(pickle.load(open(ARGS.inputFileRadical+'.test', 'rb')))
+	testSet_x = np.array(pickle.load(open(ARGS.inputFileRadical+'.test', 'rb')), dtype=object)
 
 	def len_argsort(seq):
 		return sorted(range(len(seq)), key=lambda x: len(seq[x]))
@@ -138,18 +139,18 @@ def load_data():
 
 
 def testModel():
-	print '==> model loading'
+	print('==> model loading')
 	global tPARAMS
 	tPARAMS = loadModel()
 
-	print '==> data loading'
+	print('==> data loading')
 	testSet = load_data()
 
-	print '==> model rebuilding'
+	print('==> model rebuilding')
 	xf, xb, mask, MODEL = build_model()
 	PREDICTOR_COMPILED = theano.function(inputs=[xf, xb, mask], outputs=MODEL, name='PREDICTOR_COMPILED')
 
-	print '==> model execution'
+	print('==> model execution')
 	nBatches = int(np.ceil(float(len(testSet)) / float(ARGS.batchSize)))
 	predictedY_list = []
 	predictedProbabilities_list = []
@@ -195,33 +196,33 @@ def testModel():
 			interpretOutPut = False #works for mimic only - either CCS or ICD-9 (must run preprocess before everything)
 			if interpretOutPut:
 				internalCodeToTextualDescriptionMAP = pickle.load(open(ARGS.inputFileRadical[0:ARGS.inputFileRadical.rfind('/')]+'/internalCodeToTextualDescriptionMAP.pickle', 'rb'))
-				print 'Patient ' + str(ith_patient) + ' with ' + str(nVisitsOfEachPatient_List[ith_patient] + 1) + ' original admissions'
-				print 'Patient history'
+				print('Patient ' + str(ith_patient) + ' with ' + str(nVisitsOfEachPatient_List[ith_patient] + 1) + ' original admissions')
+				print('Patient history')
 				if ith_admission == 0:
 					ZerothAdmission = batchX[ith_patient][0]
-					print 'Admission....: ' + str(ith_admission) + ' => ' + str(ZerothAdmission)  # using for debug, I do not discard the first
-					print '  Textual....: ' + str([(code, internalCodeToTextualDescriptionMAP[code]) for code in ZerothAdmission])
-				print ''
+					print('Admission....: ' + str(ith_admission) + ' => ' + str(ZerothAdmission))  # using for debug, I do not discard the first
+					print('  Textual....: ' + str([(code, internalCodeToTextualDescriptionMAP[code]) for code in ZerothAdmission]))
+				print('')
 
 				actualIthAdmission = actual_y[ith_admission]  # actual_y starts at actual admission 1
 				sortedActualAdmis = sorted(actualIthAdmission, key=lambda x: x)
-				print 'Admission....: ' + str(ith_admission + 1) + ' => ' + str(sortedActualAdmis)  # using for debug, I do not discard the first
-				print '  Textual....: ' + str([(code,internalCodeToTextualDescriptionMAP[code]) for code in sortedActualAdmis])
+				print('Admission....: ' + str(ith_admission + 1) + ' => ' + str(sortedActualAdmis)) # using for debug, I do not discard the first
+				print('  Textual....: ' + str([(code,internalCodeToTextualDescriptionMAP[code]) for code in sortedActualAdmis]))
 
-				print 'Prediction...: ' + str(ith_admission + 1) + ' => ' + str(sortedTopPredictions_indexes)
-				print '  Textual....: ' + str([(code, internalCodeToTextualDescriptionMAP[code]) for code in sortedTopPredictions_indexes[0:10]])
+				print('Prediction...: ' + str(ith_admission + 1) + ' => ' + str(sortedTopPredictions_indexes))
+				print('  Textual....: ' + str([(code, internalCodeToTextualDescriptionMAP[code]) for code in sortedTopPredictions_indexes[0:10]]))
 
 				intersection = set(sortedTopPredictions_indexes) & set(sortedActualAdmis)
-				print '-Intersection: ' + str(sorted(intersection, key=lambda x: x))
-				print '  Textual....: ' + str([(code, internalCodeToTextualDescriptionMAP[code]) for code in intersection])
+				print('-Intersection: ' + str(sorted(intersection, key=lambda x: x)))
+				print('  Textual....: ' + str([(code, internalCodeToTextualDescriptionMAP[code]) for code in intersection]))
 
 				differenceToPreviousAdmis = set(intersection) - set(batchX[ith_patient][ith_admission]) #here, we have to use batch, because actual_y estarts at index 1
-				print '-Difference..: ' + str(sorted(differenceToPreviousAdmis, key=lambda x: x)) + ' => predicted, but not in the previous admission; means robustness of the predictor'
-				print '  Textual....: ' + str([(code, internalCodeToTextualDescriptionMAP[code]) for code in differenceToPreviousAdmis])
-				print '-----------------------------------------------'
-				print '-----------------------------------------------'
+				print('-Difference..: ' + str(sorted(differenceToPreviousAdmis, key=lambda x: x)) + ' => predicted, but not in the previous admission; means robustness of the predictor')
+				print('  Textual....: ' + str([(code, internalCodeToTextualDescriptionMAP[code]) for code in differenceToPreviousAdmis]))
+				print('-----------------------------------------------')
+				print('-----------------------------------------------')
 	#---------------------------------Report results using k=[10,20,30]
-	print '==> computation of prediction results with constant k'
+	print('==> computation of prediction results with constant k')
 	recall_sum = [0.0, 0.0, 0.0]
 
 	k_list = [10,20,30]
@@ -247,18 +248,18 @@ def testModel():
 		finalRecalls.append(recall_sum[ithK] / float(len(predictedY_list)))
 		finalPrecisions.append(precision_sum[ithK] / float(len(predictedY_list)))
 
-	print 'Results for Recall@' + str(k_list)
-	print str(finalRecalls[0])
-	print str(finalRecalls[1])
-	print str(finalRecalls[2])
+	print('Results for Recall@' + str(k_list))
+	print(str(finalRecalls[0]))
+	print(str(finalRecalls[1]))
+	print(str(finalRecalls[2]))
 
-	print 'Results for Precision@' + str(k_listForPrecision)
-	print str(finalPrecisions[0])
-	print str(finalPrecisions[1])
-	print str(finalPrecisions[2])
+	print('Results for Precision@' + str(k_listForPrecision))
+	print(str(finalPrecisions[0]))
+	print(str(finalPrecisions[1]))
+	print(str(finalPrecisions[2]))
 
 	#---------------------------------Report results using k=lenght of actual answer vector
-	print '==> computation of prediction results with dynamic k=lenght of actual answer vector times [1,2,3]'
+	print('==> computation of prediction results with dynamic k=lenght of actual answer vector times [1,2,3]')
 	recall_sum = [0.0, 0.0, 0.0]
 	precision_sum = [0.0, 0.0, 0.0]
 	multiples_list = [0, 1, 2]
@@ -284,15 +285,15 @@ def testModel():
 			finalRecalls.append(recall_sum[m] / float(len(predictedY_list)))
 			finalPrecisions.append(precision_sum[m] / float(len(predictedY_list)))
 
-		print 'Results for Recall@k*1, Recall@k*2, and Recall@k*3'
-		print str(finalRecalls[0])
-		print str(finalRecalls[1])
-		print str(finalRecalls[2])
+		print('Results for Recall@k*1, Recall@k*2, and Recall@k*3')
+		print(str(finalRecalls[0]))
+		print(str(finalRecalls[1]))
+		print(str(finalRecalls[2]))
 
-		print 'Results for Precision@k*1, Precision@k*2, and Precision@k*3'
-		print str(finalPrecisions[0])
-		print str(finalPrecisions[1])
-		print str(finalPrecisions[2])
+		print('Results for Precision@k*1, Precision@k*2, and Precision@k*3')
+		print(str(finalPrecisions[0]))
+		print(str(finalPrecisions[1]))
+		print(str(finalPrecisions[2]))
 
 	# ---------------------------------Write data for AUC-ROC computation
 	bWriteDataForAUC = False
@@ -316,30 +317,30 @@ def testModel():
 			#it is used for both Precision Recall and for AUCROC
 			if predicted_code in ithActualY:
 				fullListOfTrueYOutcomeForAUCROCAndPR_list.append(1)
-				#file.write("1 " + str(predicted_prob) + '\n')
+			#file.write("1 " + str(predicted_prob) + '\n')
 			else:
 				fullListOfTrueYOutcomeForAUCROCAndPR_list.append(0)
-				#file.write("0 " + str(predicted_prob) + '\n')
+			#file.write("0 " + str(predicted_prob) + '\n')
 			ithPrediction += 1
 	#file.close()
 
 	#https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html
-	print "Weighted AUC-ROC score: " + str(metrics.roc_auc_score(fullListOfTrueYOutcomeForAUCROCAndPR_list,
-														fullListOfPredictedYProbsForAUCROC_list,
-														average = 'weighted'))
+	print("Weighted AUC-ROC score: " + str(metrics.roc_auc_score(fullListOfTrueYOutcomeForAUCROCAndPR_list,
+																 fullListOfPredictedYProbsForAUCROC_list,
+																 average = 'weighted')))
 	#https://scikit-learn.org/stable/modules/generated/sklearn.metrics.precision_recall_fscore_support.html
 	PRResults = metrics.precision_recall_fscore_support(fullListOfTrueYOutcomeForAUCROCAndPR_list,
 														fullListOfPredictedYForPrecisionRecall_list,
 														average = 'binary')
-	print 'Precision: ' + str(PRResults[0])
-	print 'Recall: ' + str(PRResults[1])
-	print 'Binary F1 Score: ' + str(PRResults[2]) #FBeta score with beta = 1.0
-	print 'Support: ' + str(PRResults[3])
+	print('Precision: ' + str(PRResults[0]))
+	print('Recall: ' + str(PRResults[1]))
+	print('Binary F1 Score: ' + str(PRResults[2])) #FBeta score with beta = 1.0
+	print('Support: ' + str(PRResults[3]))
 
 	average_precision = metrics.average_precision_score(fullListOfTrueYOutcomeForAUCROCAndPR_list,
-									   			       fullListOfPredictedYForPrecisionRecall_list)
+														fullListOfPredictedYForPrecisionRecall_list)
 	precision, recall, _ = metrics.precision_recall_curve(fullListOfTrueYOutcomeForAUCROCAndPR_list,
-									   			       fullListOfPredictedYForPrecisionRecall_list)
+														  fullListOfPredictedYForPrecisionRecall_list)
 
 
 def parse_arguments():
